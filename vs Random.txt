@@ -1,0 +1,3 @@
+﻿Bot:	White%(W|D|L)	Black%(W|D|L)	Descrição:
+
+Bot0	40 | 50 | 10	50 | 50 | 0	Como o bot0 só leva o valor de cada peça em consideração (10 para o peão, 35 pra torre e 21 pro bispo), seu foco estava na captura de peças inimigas. 100% dos empates ocorreram por falta de movimento do adversário (só tinham 1 peão trancado)
