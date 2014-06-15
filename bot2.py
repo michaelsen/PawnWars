@@ -148,7 +148,7 @@ class Board(object):
 
     def pawn_grudge(self):
         # removes points from player depending on how many pawn were lost
-        grudge = [MIN, -100, -25, -15, -5, 0, 0, 0, 0]
+        grudge = [-1000, -100, -25, -15, -5, 0, 0, 0, 0]
         my_pawns, enemy_pawns = self.pawn_count()
         return grudge[my_pawns] - grudge[enemy_pawns]
 

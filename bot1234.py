@@ -34,7 +34,7 @@ def negamax_pruning(board, depth, inferior, superior, player):
 
 # BOT =======================================================
 class Bot0xFFCCFF(LiacBot):
-    name = 'BotoCorDeRosa'
+    name = 'Boto#FFCCFF'
 
     def __init__(self):
         super(Bot0xFFCCFF, self).__init__()
@@ -54,6 +54,10 @@ class Bot0xFFCCFF(LiacBot):
         #     raw_input()
 
         move = self.choose_move(board)
+        if move == None:
+            #better safe than sorry, get a random move
+            moves = board.generate()
+            move = random.choice(moves)
         self.last_move = move
         print move
         self.send_move(move[0], move[1])
@@ -134,6 +138,61 @@ class Board(object):
         self.my_pieces, self.enemy_pieces = self.enemy_pieces, self.my_pieces
 
         return
+        
+    def pawn_count(self):
+        my_count = 0
+        enemy_count = 0
+        for piece in self.my_pieces:
+            if piece == Pawn:
+                my_count += 1
+        for piece in self.enemy_pieces:
+            if piece == Pawn:
+                enemy_count += 1
+        return my_count, enemy_count
+
+    def rook_count(self):
+        my_count = 0
+        enemy_count = 0
+        for piece in self.my_pieces:
+            if piece == Rook:
+                my_count += 1
+        for piece in self.enemy_pieces:
+            if piece == Rook:
+                enemy_count += 1
+        return my_count, enemy_count
+
+    def bishop_count(self):
+        my_count = 0
+        enemy_count = 0
+        for piece in self.my_pieces:
+            if piece == Bishop:
+                my_count += 1
+        for piece in self.enemy_pieces:
+            if piece == Bishop:
+                enemy_count += 1
+        return my_count, enemy_count
+
+    def pawn_grudge(self):
+        # removes points from player depending on how many pawn were lost
+        grudge = [-1000, -100, -25, -15, -5, 0, 0, 0, 0]
+        #not using MIN in order to refrain from interfering with the prune
+        my_pawns, enemy_pawns = self.pawn_count()
+        return grudge[my_pawns] - grudge[enemy_pawns]
+
+    def rearguard_grudge(self):
+        # removes points from player depending on how many offensive pieces (rook and bishop) were lost
+        # losing rooks is considered to be much more devastating
+        my_rooks, enemy_rooks = self.rook_count()
+        my_bishops, enemy_bishops = self.bishop_count()
+
+        my_grudge = [-10, 0, 0]
+        enemy_grudge = [-10, 0, 0]
+        if my_bishops == 0:
+            my_grudge = [-30, -10, 0]
+        if enemy_bishops == 0:
+            enemy_grudge = [-30, -10, 0]
+
+        return my_grudge[my_rooks] - enemy_grudge[enemy_rooks]
 
     def heuristic(self):
         score = 0  
@@ -141,6 +200,8 @@ class Board(object):
             score = score + piece.evaluate()
         for piece in self.enemy_pieces:
             score = score - piece.evaluate()
+        score += self.pawn_grudge()
+        score += self.rearguard_grudge()
         if self.my_team == BLACK:
             score = -score
         return score
@@ -195,7 +256,8 @@ class Pawn(Piece):
         return 10
 
     def progression_evaluate(self):
-        progression_values = [1000, 60, 47, 34, 21, 10, 0, MIN]
+        progression_values = [1000, 60, 47, 34, 21, 10, 0]
+        #not using MAX in order to not interfere with the prune
         row = self.position[0]
         if self.team == WHITE:
             #from 0 to 7
@@ -253,11 +315,21 @@ class Rook(Piece):
 
         return moves
 
+    def defence_evaluate(self):
+        #it's better for rooks to stay in the back and block nearing pawns
+        defensive_stance = [15, 10, 5, 0, 0, 0, 0, 0]
+        row = self.position[0]
+        if self.team == BLACK:
+            row = 7 - row
+        return defensive_stance[row]
+
+
     def class_evaluate(self):
         return 35
 
     def evaluate(self):
-        return self.class_evaluate()
+        evaluation = self.class_evaluate() + self.defence_evaluate()
+        return evaluation
 
 class Bishop(Piece):
     def __init__(self, board, team, position):
@@ -294,11 +366,20 @@ class Bishop(Piece):
 
         return moves
 
+    def range_evaluate(self):
+        #it's better for bishops to stay in the middle so they have a greater range
+        range_value = [0, 2, 4, 8, 8, 4, 2, 0]
+        row, column= self.position[0], self.position[1]
+        
+        return range_value[row] + range_value[column]
+
+
     def class_evaluate(self):
         return 21
 
     def evaluate(self):
-        return self.class_evaluate()
+        evaluation = self.class_evaluate() + self.range_evaluate()
+        return evaluation
 
 # =============================================================================
 
