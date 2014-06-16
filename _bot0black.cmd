@@ -1,0 +1,1 @@
+python C:\Users\Fenrir~\Documents\GitHub\PawnWars\bot1.py black

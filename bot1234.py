@@ -73,6 +73,7 @@ class Board(object):
         self.my_pieces = []
         self.enemy_pieces = []
         self.my_team = None
+        self.enpassant = state['enpassant']
 
         PIECES = {
             'r': Rook,
@@ -197,9 +198,9 @@ class Board(object):
     def heuristic(self):
         score = 0  
         for piece in self.my_pieces:
-            score = score + piece.evaluate()
+            score += piece.evaluate()
         for piece in self.enemy_pieces:
-            score = score - piece.evaluate()
+            score -= piece.evaluate()
         score += self.pawn_grudge()
         score += self.rearguard_grudge()
         if self.my_team == BLACK:
@@ -226,6 +227,7 @@ class Pawn(Piece):
         self.board = board
         self.team = team
         self.position = position
+        self.enpassant = board.enpassant
 
     def generate(self):
         moves = []
@@ -237,6 +239,15 @@ class Pawn(Piece):
         pos = (my_row + d*1, my_col)
         if self.board.is_empty(pos) and pos[0] > -1 and pos[0] < 8:
             moves.append(pos)
+
+        # Movement to 2 forward
+        starting_line = 1
+        if d == BLACK:
+            starting_line = 6
+        if my_row == starting_line:
+            pos = (my_row + d*2, my_col)
+            if self.board.is_empty(pos) and pos[0] > -1 and pos[0] < 8:
+                moves.append(pos)
 
         # Normal capture to right
         pos = (my_row + d*1, my_col+1)

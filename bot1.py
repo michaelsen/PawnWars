@@ -177,6 +177,15 @@ class Pawn(Piece):
         if self.board.is_empty(pos) and pos[0] > -1 and pos[0] < 8:
             moves.append(pos)
 
+        # Movement to 2 forward
+        starting_line = 1
+        if d == BLACK:
+            starting_line = 6
+        if my_row == starting_line:
+            pos = (my_row + d*2, my_col)
+            if self.board.is_empty(pos) and pos[0] > -1 and pos[0] < 8:
+                moves.append(pos)
+
         # Normal capture to right
         pos = (my_row + d*1, my_col+1)
         piece = self.board[pos]
